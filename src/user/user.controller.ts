@@ -15,8 +15,9 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { SuccessResponse } from 'src/common/responses/success.response';
 import { ErrorResponse } from 'src/common/responses/error.response';
-import { UserTransformer } from '../common/transformers/user.transformer';
 import { PaginationDetailsDto } from '../common/pagination.dto';
+import { Constants } from '../common/constants';
+import { UserTransformer } from './transformers/user.transformer';
 
 @Controller('users')
 export class UserController {
@@ -38,7 +39,7 @@ export class UserController {
   }
   @Get()
   async findAll(@Query('page', ParseIntPipe) page = 1) {
-    const perPage = 10;
+    const perPage = Constants.PER_PAGE;
     // Get paginated data from the service
     const { data, total } = await this.userService.findAllPaginated(
       page,
