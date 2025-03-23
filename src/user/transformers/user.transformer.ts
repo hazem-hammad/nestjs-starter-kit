@@ -1,4 +1,4 @@
-import { BaseTransformer } from './base.transformer';
+import { BaseTransformer } from 'src/common/transformers/base.transformer';
 import { User } from '../../user/entities/user.entity';
 
 export class UserTransformer extends BaseTransformer<User> {
