@@ -5,8 +5,10 @@ import {
   Body,
   Patch,
   Param,
-  Delete,
   HttpStatus,
+  Query,
+  Delete,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -14,6 +16,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { SuccessResponse } from 'src/common/responses/success.response';
 import { ErrorResponse } from 'src/common/responses/error.response';
 import { UserTransformer } from '../common/transformers/user.transformer';
+import { PaginationDetailsDto } from '../common/pagination.dto';
 
 @Controller('users')
 export class UserController {
@@ -33,15 +36,22 @@ export class UserController {
       HttpStatus.CREATED,
     );
   }
-
   @Get()
-  async findAll() {
-    const users = await this.userService.findAll();
-
-    return SuccessResponse.create(
-      this.userTransformer.collection(users),
-      'Users retrieved successfully',
+  async findAll(@Query('page', ParseIntPipe) page = 1) {
+    const perPage = 10;
+    // Get paginated data from the service
+    const { data, total } = await this.userService.findAllPaginated(
+      page,
+      perPage,
     );
+
+    // Create an object that includes both user data and pagination details
+    const response = {
+      users: this.userTransformer.collection(data),
+      pagination: new PaginationDetailsDto(total, data.length, perPage, page),
+    };
+
+    return SuccessResponse.create(response, 'Users retrieved successfully');
   }
 
   @Get(':id')
@@ -64,13 +74,14 @@ export class UserController {
 
   @Patch(':id')
   async update(@Param('id') id: number, @Body() updateUserDto: UpdateUserDto) {
-    // try {
-    const updatedUser = await this.userService.update(id, updateUserDto);
-    const transformedUser = this.userTransformer.transform(updatedUser);
-    return SuccessResponse.create(transformedUser, 'User updated successfully');
-    // } catch (error) {
-    //   return error;
-    // }
+    try {
+      const updatedUser = await this.userService.update(id, updateUserDto);
+      const transformedUser = await this.userTransformer.transform(updatedUser);
+      return SuccessResponse.create(
+        transformedUser,
+        'User updated successfully',
+      );
+    } catch (error) {}
   }
 
   @Delete(':id')

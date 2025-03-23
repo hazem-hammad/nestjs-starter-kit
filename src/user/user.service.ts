@@ -15,9 +15,23 @@ export class UserService {
     return this.userRepository.save(createUserDto);
   }
 
-  findAll() {
-    const users = this.userRepository.find();
+  findAll(page: number = 1, limit: number = 10) {
+    const users = this.userRepository.find({
+      skip: (page - 1) * limit,
+      take: limit,
+    });
     return users;
+  }
+
+  async findAllPaginated(
+    page: number,
+    perPage: number,
+  ): Promise<{ data: User[]; total: number }> {
+    const [data, total] = await this.userRepository.findAndCount({
+      skip: (page - 1) * perPage,
+      take: perPage,
+    });
+    return { data, total };
   }
 
   findOne(id: number) {
